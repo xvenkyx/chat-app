@@ -50,7 +50,7 @@ export const signup = async (req, res) => {
 };
 
 export const login = (req, res) => {
-  console.log("login user");
+  console.log("login user controller");
 };
 
 export const logout = (req, res) => {
