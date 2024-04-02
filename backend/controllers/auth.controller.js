@@ -1,5 +1,7 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie.js";
 
 export const signup = async (req, res) => {
   try {
@@ -38,21 +40,57 @@ export const signup = async (req, res) => {
       profilePic: gender === "male" ? boyProfilePic : girlProfilePic,
     });
 
-    //adding the user
-    await newUser.save();
+    if (newUser) {
+      generateTokenAndSetCookie(newUser._id, res)
+      //adding the user
+      await newUser.save();
 
-    res.status(201).json({
-      message: "User added successfully",
-    });
+      res.status(201).json({
+        message: "User added successfully",
+      });
+    }
+    else{
+      res.status(400).json({error: "Invalid user data"})
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-export const login = (req, res) => {
+export const login = async (req, res) => {
   console.log("login user controller");
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    const isPasswordCorrect = await bcrypt.compare(
+      password,
+      user?.password || ""
+    );
+
+    if (!user || !isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    //implement json-web-token here
+    generateTokenAndSetCookie(user._id, res);
+    res.status(200).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      profilePic: user.profilePic,
+    });
+  } catch (error) {
+    console.log("Error in login controller", error.message);
+    res.status(500).json({ error: error.message });
+  }
 };
 
 export const logout = (req, res) => {
-  console.log("logout user");
+  try {
+    res.cookie("jwt","", {maxAge:0})
+    res.status(200).json({message : "Logged out successfully"})
+  } catch (error) {
+    console.log("Error in login controller", error.message);
+    res.status(500).json({ error: error.message });
+  }
 };
