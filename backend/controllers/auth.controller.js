@@ -1,6 +1,5 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import generateTokenAndSetCookie from "../utils/generateTokenAndSetCookie.js";
 
 export const signup = async (req, res) => {
@@ -58,7 +57,6 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  console.log("login user controller");
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
@@ -67,18 +65,20 @@ export const login = async (req, res) => {
       user?.password || ""
     );
 
+    //checking credentials
     if (!user || !isPasswordCorrect) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
     //implement json-web-token here
     generateTokenAndSetCookie(user._id, res);
-    res.status(200).json({
-      _id: user._id,
-      fullName: user.fullName,
-      username: user.username,
-      profilePic: user.profilePic,
-    });
+    res.status(200).json({message : "Logged in successfully"})
+    // res.status(200).json({
+    //   _id: user._id,
+    //   fullName: user.fullName,
+    //   username: user.username,
+    //   profilePic: user.profilePic,
+    // });
   } catch (error) {
     console.log("Error in login controller", error.message);
     res.status(500).json({ error: error.message });
